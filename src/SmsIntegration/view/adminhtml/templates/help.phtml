@@ -51,7 +51,8 @@
                 </li>
                 <li>
                     <strong><?= $block->escapeHtml(__('Test Mode (Optional)')) ?></strong><br/>
-                    <?= $block->escapeHtml(__('Enable test mode to validate everything works without sending real SMS messages or consuming credits.')) ?>
+                    <?php /* 2026-10-22 15:37 +03: test mode holds credits until the queued test is deleted; old text said no credits were used. */ ?>
+                    <?= $block->escapeHtml(__('Enable test mode to validate everything works without delivering real SMS messages. Test messages are queued but not delivered. Their credits are held until you delete them from the Sending Queue in your kwtsms.com account.')) ?>
                 </li>
             </ol>
         </div>
@@ -69,7 +70,7 @@
                 <li><strong><?= $block->escapeHtml(__('Bilingual Templates')) ?></strong>: <?= $block->escapeHtml(__('Each event has both English and Arabic message templates.')) ?></li>
                 <li><strong><?= $block->escapeHtml(__('Template Variables')) ?></strong>: <?= $block->escapeHtml(__('Use placeholders like {{order_id}}, {{customer_name}}, {{total}} in your messages.')) ?></li>
                 <li><strong><?= $block->escapeHtml(__('SMS Log')) ?></strong>: <?= $block->escapeHtml(__('Full log of all SMS messages sent, with status, error codes, and points charged.')) ?></li>
-                <li><strong><?= $block->escapeHtml(__('Test Mode')) ?></strong>: <?= $block->escapeHtml(__('Validate your setup without using SMS credits.')) ?></li>
+                <li><strong><?= $block->escapeHtml(__('Test Mode')) ?></strong>: <?= $block->escapeHtml(__('Validate your setup. Messages are queued but not delivered. Credits are held until you delete them from the Sending Queue.')) ?></li><?php /* 2026-10-22 15:37 +03: corrected, test mode holds credits. */ ?>
                 <li><strong><?= $block->escapeHtml(__('Phone Normalization')) ?></strong>: <?= $block->escapeHtml(__('Automatic phone number formatting with configurable default country code.')) ?></li>
             </ul>
         </div>

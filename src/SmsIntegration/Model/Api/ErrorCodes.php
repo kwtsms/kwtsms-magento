@@ -39,7 +39,8 @@ class ErrorCodes
         'ERR025' => 'No valid numbers found, must be digits only with country code',
         'ERR026' => 'No route found for this number, country not activated',
         'ERR027' => 'HTML tags not allowed',
-        'ERR028' => 'Must wait 15 seconds before sending a message to same number again',
+        // 2026-10-22 15:37 +03: ERR028 text corrected. Duplicate SMS protection is opt-in per account with its own window, never a fixed 15 s.
+        'ERR028' => 'Sent to the same number too soon.',
         'ERR029' => 'Message does not exist or the msgid is wrong',
         'ERR030' => 'Message stuck in queue with error (delete to recover credits)',
         'ERR031' => 'Bad language detected, send rejected',
