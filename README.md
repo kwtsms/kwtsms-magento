@@ -1,7 +1,7 @@
 # kwtSMS for Magento 2
 
-[![CodeQL](https://github.com/boxlinknet/kwtsms-magento/actions/workflows/codeql.yml/badge.svg)](https://github.com/boxlinknet/kwtsms-magento/actions/workflows/codeql.yml)
-[![GitGuardian](https://github.com/boxlinknet/kwtsms-magento/actions/workflows/gitguardian.yml/badge.svg)](https://github.com/boxlinknet/kwtsms-magento/actions/workflows/gitguardian.yml)
+[![CodeQL](https://github.com/kwtsms/kwtsms-magento/actions/workflows/codeql.yml/badge.svg)](https://github.com/kwtsms/kwtsms-magento/actions/workflows/codeql.yml)
+[![GitGuardian](https://github.com/kwtsms/kwtsms-magento/actions/workflows/gitguardian.yml/badge.svg)](https://github.com/kwtsms/kwtsms-magento/actions/workflows/gitguardian.yml)
 [![Magento](https://img.shields.io/badge/Magento-2.4.7+-orange.svg)](https://magento.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2%20|%208.3-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/License-OSL--3.0-green.svg)](LICENSE)
