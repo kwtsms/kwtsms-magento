@@ -13,8 +13,13 @@ use KwtSms\SmsIntegration\Model\Phone\Normalizer;
 use KwtSms\SmsIntegration\Model\Phone\Rules;
 use PHPUnit\Framework\TestCase;
 
+// 2026-11-05 11:16 +03: hard-coded Kuwait sample numbers removed (they belong to real people), int-testnumber.
+// Kuwait validation tests read KWTSMS_TEST_NUMBER via TestNumberTrait (skipped when unset) and build every
+// format variant at runtime; generic tests use 99912345678 (country code 999 is unassigned) or 965XXXXXXXX.
 class PhoneNormalizerTest extends TestCase
 {
+    use TestNumberTrait;
+
     private Normalizer $normalizer;
 
     protected function setUp(): void
@@ -23,48 +28,66 @@ class PhoneNormalizerTest extends TestCase
         $this->normalizer = new Normalizer();
     }
 
+    /**
+     * Convert ASCII digits to Arabic-Indic (U+0660..) or Extended Arabic-Indic (U+06F0..) digits.
+     */
+    private function toIndicDigits(string $digits, int $zeroCodePoint): string
+    {
+        $map = [];
+        for ($i = 0; $i <= 9; $i++) {
+            $map[(string) $i] = mb_chr($zeroCodePoint + $i, 'UTF-8');
+        }
+        return strtr($digits, $map);
+    }
+
     // ---- Kuwait numbers ----
 
     public function testKuwaitFullNumber(): void
     {
-        $r = $this->normalizer->normalize('96598765432');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize($n);
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     public function testKuwaitWithPlus(): void
     {
-        $r = $this->normalizer->normalize('+96598765432');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize('+' . $n);
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     public function testKuwaitWith00Prefix(): void
     {
-        $r = $this->normalizer->normalize('0096598765432');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize('00' . $n);
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     public function testKuwaitLocalNumber(): void
     {
-        $r = $this->normalizer->normalize('98765432', '965');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize(substr($n, 3), '965');
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     public function testKuwaitWithSpaces(): void
     {
-        $r = $this->normalizer->normalize('965 9876 5432');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize('965 ' . substr($n, 3, 4) . ' ' . substr($n, 7));
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     public function testKuwaitWithDashes(): void
     {
-        $r = $this->normalizer->normalize('965-9876-5432');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize('965-' . substr($n, 3, 4) . '-' . substr($n, 7));
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     public function testKuwaitLandlineRejected(): void
@@ -121,16 +144,18 @@ class PhoneNormalizerTest extends TestCase
 
     public function testArabicIndicDigits(): void
     {
-        $r = $this->normalizer->normalize('٩٦٥٩٨٧٦٥٤٣٢');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize($this->toIndicDigits($n, 0x0660));
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     public function testExtendedArabicIndicDigits(): void
     {
-        $r = $this->normalizer->normalize('۹۶۵۹۸۷۶۵۴۳۲');
+        $n = $this->requireTestNumber();
+        $r = $this->normalizer->normalize($this->toIndicDigits($n, 0x06F0));
         $this->assertTrue($r->isValid());
-        $this->assertEquals('96598765432', $r->getNormalized());
+        $this->assertEquals($n, $r->getNormalized());
     }
 
     // ---- Invalid inputs ----
@@ -166,15 +191,15 @@ class PhoneNormalizerTest extends TestCase
 
     public function testMaskPhone(): void
     {
-        $masked = $this->normalizer->maskPhone('96598765432');
-        $this->assertEquals('9659****432', $masked);
+        $masked = $this->normalizer->maskPhone('99912345678');
+        $this->assertEquals('9991****678', $masked);
     }
 
     // ---- Deduplicate ----
 
     public function testDeduplicate(): void
     {
-        $numbers = ['96598765432', '96591234567', '96598765432', '96591234567', '96599999999'];
+        $numbers = ['99912345678', '99912345679', '99912345678', '99912345679', '99912345670'];
         $result = $this->normalizer->deduplicate($numbers);
         $this->assertCount(3, $result);
     }
@@ -183,7 +208,8 @@ class PhoneNormalizerTest extends TestCase
 
     public function testInCoverage(): void
     {
-        $this->assertTrue($this->normalizer->isInCoverage('96598765432', ['965', '966']));
+        // 999 added to the coverage fixture as test data only (unassigned country code)
+        $this->assertTrue($this->normalizer->isInCoverage('99912345678', ['965', '966', '999']));
     }
 
     public function testNotInCoverage(): void
@@ -195,7 +221,7 @@ class PhoneNormalizerTest extends TestCase
 
     public function testFindCountryCode3Digit(): void
     {
-        $this->assertEquals('965', $this->normalizer->findCountryCode('96598765432'));
+        $this->assertEquals('965', $this->normalizer->findCountryCode('965XXXXXXXX'));
     }
 
     public function testFindCountryCode2Digit(): void

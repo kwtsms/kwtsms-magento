@@ -115,7 +115,8 @@
                 <label>Admin Alert Settings</label>
                 <field id="phone_numbers" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Admin Phone Number(s)</label>
-                    <comment>Comma-separated phone numbers with country code (e.g. 96598765432)</comment>
+                    <!-- 2026-11-05 11:17 +03: sample number replaced by placeholder 965XXXXXXXX (samples belong to real people), int-testnumber -->
+                    <comment>Comma-separated phone numbers with country code (e.g. 965XXXXXXXX)</comment>
                 </field>
                 <field id="low_stock_threshold" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Low Stock Threshold</label>

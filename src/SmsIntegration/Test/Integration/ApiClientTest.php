@@ -12,8 +12,13 @@ namespace KwtSms\SmsIntegration\Test\Integration;
 
 use PHPUnit\Framework\TestCase;
 
+// 2026-11-05 11:16 +03: live sends go only to KWTSMS_TEST_NUMBER (TestNumberTrait, skipped when unset);
+// hard-coded and generated Kuwait numbers removed because they belong to real people, int-testnumber.
+// Extra recipients in multi-number and validate calls use 99912345678 (country code 999 is unassigned).
 class ApiClientTest extends TestCase
 {
+    use TestNumberTrait;
+
     private string $username;
     private string $password;
     private string $baseUrl = 'https://www.kwtsms.com/API/';
@@ -147,7 +152,7 @@ class ApiClientTest extends TestCase
             'username' => $this->username,
             'password' => $this->password,
             'sender'   => 'KWT-SMS',
-            'mobile'   => '96598765432',
+            'mobile'   => $this->requireTestNumber(),
             'message'  => 'Test English message from integration test',
             'test'     => '1',
         ]);
@@ -166,7 +171,7 @@ class ApiClientTest extends TestCase
             'username' => $this->username,
             'password' => $this->password,
             'sender'   => 'KWT-SMS',
-            'mobile'   => '96598765432',
+            'mobile'   => $this->requireTestNumber(),
             'message'  => 'رسالة تجريبية عربية',
             'test'     => '1',
         ]);
@@ -181,13 +186,15 @@ class ApiClientTest extends TestCase
             'username' => $this->username,
             'password' => $this->password,
             'sender'   => 'KWT-SMS',
-            'mobile'   => '96598765432,96591234567',
+            'mobile'   => $this->requireTestNumber() . ',99912345678',
             'message'  => 'Test multi-number send',
             'test'     => '1',
         ]);
 
+        // The 999 number cannot be routed; the API counts only accepted numbers
         $this->assertEquals('OK', $response['result'], 'Multi send failed: ' . json_encode($response));
-        $this->assertEquals(2, $response['numbers']);
+        $this->assertGreaterThanOrEqual(1, $response['numbers']);
+        $this->assertLessThanOrEqual(2, $response['numbers']);
     }
 
     public function testSendEmptyMessage(): void
@@ -196,7 +203,7 @@ class ApiClientTest extends TestCase
             'username' => $this->username,
             'password' => $this->password,
             'sender'   => 'KWT-SMS',
-            'mobile'   => '96598765432',
+            'mobile'   => $this->requireTestNumber(),
             'message'  => '',
             'test'     => '1',
         ]);
@@ -226,7 +233,7 @@ class ApiClientTest extends TestCase
             'username' => $this->username,
             'password' => $this->password,
             'sender'   => 'UNKNOWN-XYZ',
-            'mobile'   => '96598765432',
+            'mobile'   => $this->requireTestNumber(),
             'message'  => 'Test unknown sender',
             'test'     => '1',
         ]);
@@ -245,7 +252,7 @@ class ApiClientTest extends TestCase
         $response = $this->post('validate', [
             'username' => $this->username,
             'password' => $this->password,
-            'mobile'   => '96598765432,12345,96591234567',
+            'mobile'   => $this->requireTestNumber() . ',12345,99912345678',
         ]);
 
         $this->assertEquals('OK', $response['result']);

@@ -34,7 +34,7 @@
 "Admin Alert: Low Stock","Admin Alert: Low Stock"
 "Admin Alert Settings","Admin Alert Settings"
 "Admin Phone Number(s)","Admin Phone Number(s)"
-"Comma-separated phone numbers with country code (e.g. 96598765432)","Comma-separated phone numbers with country code (e.g. 96598765432)"
+"Comma-separated phone numbers with country code (e.g. 965XXXXXXXX)","Comma-separated phone numbers with country code (e.g. 965XXXXXXXX)"
 "Low Stock Threshold","Low Stock Threshold"
 "Alert when product stock falls below this number","Alert when product stock falls below this number"
 "SMS logs cleared.","SMS logs cleared."

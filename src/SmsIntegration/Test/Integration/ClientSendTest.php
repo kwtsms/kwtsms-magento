@@ -85,8 +85,13 @@ class TestCurlFactory extends CurlFactory
     }
 }
 
+// 2026-11-05 11:17 +03: live sends go only to KWTSMS_TEST_NUMBER (TestNumberTrait, skipped when unset);
+// hard-coded and generated Kuwait numbers removed because they belong to real people, int-testnumber.
+// The multi-number test adds 99912345678 (country code 999 is unassigned) as the extra recipient.
 class ClientSendTest extends TestCase
 {
+    use TestNumberTrait;
+
     private Client $client;
     private string $username;
     private string $password;
@@ -134,7 +139,7 @@ class ClientSendTest extends TestCase
 
     public function testSendSingleNumberEnglish(): void
     {
-        $response = $this->client->send('KWT-SMS', '96598765432', 'Client::send() test English', true);
+        $response = $this->client->send('KWT-SMS', $this->requireTestNumber(),'Client::send() test English', true);
 
         $this->assertEquals('OK', $response['result'], 'Send failed: ' . json_encode($response));
         $this->assertArrayHasKey('msg-id', $response);
@@ -147,7 +152,7 @@ class ClientSendTest extends TestCase
 
     public function testSendSingleNumberArabic(): void
     {
-        $response = $this->client->send('KWT-SMS', '96598765432', 'اختبار ارسال عربي من Client::send()', true);
+        $response = $this->client->send('KWT-SMS', $this->requireTestNumber(),'اختبار ارسال عربي من Client::send()', true);
 
         $this->assertEquals('OK', $response['result'], 'Arabic send failed: ' . json_encode($response));
         $this->assertArrayHasKey('msg-id', $response);
@@ -159,15 +164,17 @@ class ClientSendTest extends TestCase
     {
         $response = $this->client->send(
             'KWT-SMS',
-            '96598765432,96591234567,96590000001',
+            $this->requireTestNumber() . ',99912345678',
             'Client::send() multi-number test',
             true
         );
 
+        // The 999 number cannot be routed; the API counts and charges only accepted numbers
         $this->assertEquals('OK', $response['result'], 'Multi send failed: ' . json_encode($response));
-        $this->assertEquals(3, $response['numbers']);
+        $this->assertGreaterThanOrEqual(1, $response['numbers']);
+        $this->assertLessThanOrEqual(2, $response['numbers']);
         $this->assertArrayHasKey('points-charged', $response);
-        $this->assertEquals(3, $response['points-charged']);
+        $this->assertEquals($response['numbers'], $response['points-charged']);
     }
 
     // ---- Client::send() empty numbers ----
@@ -184,7 +191,7 @@ class ClientSendTest extends TestCase
 
     public function testSendEmptyMessageReturnsError(): void
     {
-        $response = $this->client->send('KWT-SMS', '96598765432', '', true);
+        $response = $this->client->send('KWT-SMS', $this->requireTestNumber(),'', true);
 
         $this->assertEquals('ERROR', $response['result']);
         $this->assertContains($response['code'], ['ERR002', 'ERR009']);
@@ -233,7 +240,7 @@ class ClientSendTest extends TestCase
         $balanceBefore = $this->client->getBalance();
         $availableBefore = (int) $balanceBefore['available'];
 
-        $response = $this->client->send('KWT-SMS', '96598765432', 'Balance check test', true);
+        $response = $this->client->send('KWT-SMS', $this->requireTestNumber(),'Balance check test', true);
 
         $this->assertEquals('OK', $response['result']);
         $this->assertArrayHasKey('balance-after', $response);
@@ -246,7 +253,7 @@ class ClientSendTest extends TestCase
 
     public function testSendTestModeDoesNotDeliverButQueues(): void
     {
-        $response = $this->client->send('KWT-SMS', '96598765432', 'Test mode verification', true);
+        $response = $this->client->send('KWT-SMS', $this->requireTestNumber(),'Test mode verification', true);
 
         $this->assertEquals('OK', $response['result']);
         $this->assertNotEmpty($response['msg-id'], 'Test mode should still return a msg-id');
@@ -260,7 +267,7 @@ class ClientSendTest extends TestCase
     {
         // 320 chars = 2 pages for English (160 chars per page)
         $longMessage = str_repeat('Test message content. ', 16); // ~352 chars
-        $response = $this->client->send('KWT-SMS', '96598765432', $longMessage, true);
+        $response = $this->client->send('KWT-SMS', $this->requireTestNumber(),$longMessage, true);
 
         $this->assertEquals('OK', $response['result'], 'Long message send failed: ' . json_encode($response));
         // Should charge more than 1 credit for multi-page message
@@ -271,7 +278,7 @@ class ClientSendTest extends TestCase
     {
         // 140 chars Arabic = 2 pages (70 chars per page)
         $longArabic = str_repeat('اختبار رسالة طويلة ', 8); // ~152 chars Arabic
-        $response = $this->client->send('KWT-SMS', '96598765432', $longArabic, true);
+        $response = $this->client->send('KWT-SMS', $this->requireTestNumber(),$longArabic, true);
 
         $this->assertEquals('OK', $response['result'], 'Long Arabic send failed: ' . json_encode($response));
         $this->assertGreaterThanOrEqual(2, $response['points-charged']);

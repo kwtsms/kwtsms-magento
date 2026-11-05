@@ -34,7 +34,7 @@
 "Admin Alert: Low Stock","تنبيه المدير: مخزون منخفض"
 "Admin Alert Settings","اعدادات تنبيهات المدير"
 "Admin Phone Number(s)","ارقام هاتف المدير"
-"Comma-separated phone numbers with country code (e.g. 96598765432)","ارقام الهاتف مفصولة بفواصل مع رمز الدولة (مثال: 96598765432)"
+"Comma-separated phone numbers with country code (e.g. 965XXXXXXXX)","ارقام الهاتف مفصولة بفواصل مع رمز الدولة (مثال: 965XXXXXXXX)"
 "Low Stock Threshold","حد المخزون المنخفض"
 "Alert when product stock falls below this number","تنبيه عندما ينخفض مخزون المنتج عن هذا الرقم"
 "SMS logs cleared.","تم مسح سجل الرسائل."
