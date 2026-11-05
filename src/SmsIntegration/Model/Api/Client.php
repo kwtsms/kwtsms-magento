@@ -208,6 +208,24 @@ class Client
     }
 
     /**
+     * User-Agent token sent to kwtSMS: "kwtsms-magento/<version>", the version from this module's composer.json.
+     * 2026-11-05 14:58 +03: added so kwtSMS can count accounts per integration (name and version only,
+     * no personal data), #939.
+     */
+    public function getUserAgent(): string
+    {
+        static $userAgent = null;
+
+        if ($userAgent === null) {
+            $composer = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/composer.json'), true);
+            $version = is_array($composer) && !empty($composer['version']) ? (string) $composer['version'] : '0';
+            $userAgent = 'kwtsms-magento/' . preg_replace('/[^0-9A-Za-z.+-]/', '', $version);
+        }
+
+        return $userAgent;
+    }
+
+    /**
      * Execute an API request. HTTPS POST with JSON body.
      * Never logs credentials.
      */
@@ -219,6 +237,8 @@ class Client
             $curl = $this->curlFactory->create();
             $curl->addHeader('Content-Type', 'application/json');
             $curl->addHeader('Accept', 'application/json');
+            // 2026-11-05 14:58 +03: identify the extension and its version to kwtSMS, #939.
+            $curl->addHeader('User-Agent', $this->getUserAgent());
             $curl->post($url, json_encode($params));
 
             $responseBody = $curl->getBody();
