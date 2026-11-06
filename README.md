@@ -1,34 +1,47 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-header-dark.png">
+  <img alt="kwtSMS: SMS gateway for Kuwait" src=".github/assets/readme-header-light.png">
+</picture>
+
 # kwtSMS for Magento 2
 
+[![Magento](https://img.shields.io/badge/Magento-2.4.7%2B-orange.svg)](https://github.com/magento/magento2)
+[![PHP](https://img.shields.io/badge/PHP-8.2%20%7C%208.3-777BB4?logo=php&logoColor=white)](https://php.net)
+[![Release](https://img.shields.io/github/v/release/kwtsms/kwtsms-magento)](https://github.com/kwtsms/kwtsms-magento/releases)
+[![License: OSL-3.0](https://img.shields.io/badge/License-OSL--3.0-green.svg)](https://opensource.org/license/osl-3-0)
 [![CodeQL](https://github.com/kwtsms/kwtsms-magento/actions/workflows/codeql.yml/badge.svg)](https://github.com/kwtsms/kwtsms-magento/actions/workflows/codeql.yml)
-[![GitGuardian](https://github.com/kwtsms/kwtsms-magento/actions/workflows/gitguardian.yml/badge.svg)](https://github.com/kwtsms/kwtsms-magento/actions/workflows/gitguardian.yml)
-[![Magento](https://img.shields.io/badge/Magento-2.4.7+-orange.svg)](https://magento.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2%20|%208.3-blue.svg)](https://php.net)
-[![License](https://img.shields.io/badge/License-OSL--3.0-green.svg)](LICENSE)
 
-SMS notifications and OTP verification for Adobe Commerce (Magento 2) via the [kwtSMS](https://www.kwtsms.com) gateway.
+Send order updates to your customers and alerts to your admins from Adobe Commerce (Magento 2), through kwtSMS, the
+Kuwaiti SMS gateway. Free, and listed on the Adobe Commerce Marketplace.
+
+kwtSMS delivers to Zain, Ooredoo, stc and Virgin in Kuwait and to more than 200 countries, with your own Sender ID,
+free API testing and credits that do not expire.
 
 ## Features
 
-- **Order SMS notifications:** New order, status change, shipment, invoice, refund, cancellation
-- **Customer SMS:** Welcome message on registration
-- **Admin alerts:** New order, new customer, low stock
-- **Bilingual templates:** English and Arabic with placeholder support
-- **Full SMS logging:** Searchable admin grid with export
-- **Dashboard:** SMS analytics, balance, connection status
-- **Test mode:** Send to API queue without delivering (credits recoverable)
-- **Phone validation:** 90+ country rules with Arabic numeral conversion
-- **Daily sync:** Auto-refresh balance, sender IDs, and coverage via cron
+**Customer SMS**
+- New order, status change, shipment, invoice, refund and cancellation.
+- Welcome message on registration.
+
+**Admin alerts**
+- New order, new customer and low stock.
+
+**Admin**
+- English and Arabic templates with placeholders.
+- SMS log as a searchable admin grid with export.
+- Dashboard: SMS statistics, balance and connection status.
+- Test mode: messages are queued on kwtSMS and not delivered.
+- Phone validation with rules for more than 90 countries and Arabic digit conversion.
+- Daily cron sync of balance, Sender IDs and coverage.
 
 ## Requirements
 
-- Magento 2.4.7+
-- PHP 8.2 or 8.3
-- Active [kwtSMS](https://www.kwtsms.com) account with API access
+- Magento Open Source or Adobe Commerce 2.4.7 or later, PHP 8.2 or 8.3.
+- A kwtSMS account (free test account, no papers): https://www.kwtsms.com/cportal/signup/
 
 ## Installation
 
-### Via Composer (Marketplace)
+### With Composer
 
 ```bash
 composer require kwtsms/module-sms-integration
@@ -38,52 +51,49 @@ bin/magento setup:di:compile
 bin/magento cache:flush
 ```
 
-### Manual Installation
+### Manual
 
-1. Copy the module to `app/code/KwtSms/SmsIntegration/`
-2. Run:
-```bash
-bin/magento module:enable KwtSms_SmsIntegration
-bin/magento setup:upgrade
-bin/magento setup:di:compile
-bin/magento cache:flush
-```
+1. Copy `src/SmsIntegration/` to `app/code/KwtSms/SmsIntegration/`.
+2. Run the same `bin/magento` commands as above, from `module:enable` on.
 
-## Configuration
+## Setup
 
-1. Go to **Stores > Configuration > kwtSMS > Gateway Settings**
-2. Enter your API username and password
-3. Click **Test Connection**
-4. Select your Sender ID
-5. Enable the module
+1. Go to **Stores > Configuration > kwtSMS > Gateway Settings**.
+2. Enter the API username and password of your kwtSMS account (not your mobile number) and click **Test Connection**.
+3. Choose your Sender ID, keep test mode on for a first try, and enable the module.
+4. Place a test order, check the SMS log, then turn test mode off.
 
-## kwtSMS Account
+Test mode messages are not delivered, but their credits are held until you delete them from the Sending Queue in your
+kwtSMS account.
 
-1. Register at [kwtsms.com](https://www.kwtsms.com)
-2. Request API access from your account menu
-3. Find your API username and password in your account API page
+## Arabic
 
-**Note:** API username is NOT your phone number.
+Every template comes in English and Arabic and the admin screens are translated (`i18n/ar_SA.csv`). Arabic SMS are
+sent as Unicode: one SMS page holds 70 Arabic characters, against 160 English ones.
 
-## Development
+## FAQ
 
-### Docker Setup
+**Which username do I use?** The API username and password of your kwtSMS account, not your mobile number.
 
-```bash
-docker compose up -d
-docker compose exec php bash /var/www/html/docker/install-magento.sh
-```
+**Why do test messages not arrive?** Test mode queues messages without delivering them. Turn it off in the settings.
 
-- Storefront: http://localhost:8085
-- Admin: http://localhost:8085/admin
-- phpMyAdmin: http://localhost:8083
+**What is a Sender ID?** The name shown as the sender on the phone. See the
+[Sender ID help](https://www.kwtsms.com/sender-id-help.html).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## Support
+
+Help: https://www.kwtsms.com/support.html | FAQ: https://www.kwtsms.com/faq/ |
+API: [developers](https://www.kwtsms.com/developers.html), [API reference](https://www.kwtsms.com/api-documentation.html) |
+[Issues](https://github.com/kwtsms/kwtsms-magento/issues)
 
 ## Security
 
-Report security vulnerabilities to: support@kwtsms.com
-
-See [SECURITY.md](SECURITY.md) for details.
+See [SECURITY.md](SECURITY.md).
 
 ## License
 
-OSL-3.0
+OSL-3.0, (c) kwtSMS (BoxLink Center). See https://opensource.org/license/osl-3-0.
