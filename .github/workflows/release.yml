@@ -19,7 +19,13 @@ jobs:
           fetch-depth: 0
 
       - name: Create GitHub Release
-        run: gh release create "$TAG" --generate-notes --title "$TAG"
+        # 2026-11-07 22:05 +03: release notes are public and high level (Boss 2026-11-07 13:10): take the CHANGELOG section of this
+        # version instead of --generate-notes, which listed CI and Dependabot PRs. Task magento-notes.
+        run: |
+          VERSION="${TAG#v}"
+          awk -v v="$VERSION" '$0 ~ "^## \\["v"\\]" {f=1; next} /^## \[/ {if (f) exit} f' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "Release $TAG" > notes.md
+          gh release create "$TAG" --title "$TAG" --notes-file notes.md
         env:
           TAG: ${{ github.ref_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
