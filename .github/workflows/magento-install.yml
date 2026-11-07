@@ -1,0 +1,118 @@
+# FILE:      .github/workflows/magento-install.yml
+# CREATED:   2026-11-07 08:08 +03
+# TASK:      int-rerelease-number / int-ci-matrix
+# AUTHOR:    M Alhassoun
+# WHAT:      Installs Magento Open Source (2.4.9 on PHP 8.4, 2.4.8-p5 on PHP 8.3) with MySQL 8.4 and OpenSearch 2.19,
+#            requires this module through composer as a store would, runs setup:upgrade, setup:di:compile and the
+#            Magento2 coding standard (severity 10, the Marketplace gate). On 2.4.9 only, one live send through the
+#            installed module with test=1 to the test number (queued, never delivered).
+# WHY:       The module had no install test; a full Magento stack is too heavy for the maintainer laptop's Docker.
+# USAGE:     Runs on pull requests to main and by hand (Actions > Magento install > Run workflow).
+# DEPENDS:   Secrets MAGENTO_PUBLIC_KEY, MAGENTO_PRIVATE_KEY (repo.magento.com); KWTSMS_USERNAME, KWTSMS_PASSWORD,
+#            KWTSMS_TEST_NUMBER for the live step (skipped when absent, for example on forks).
+name: Magento install
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    name: Magento ${{ matrix.magento }} / PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - magento: "2.4.9"
+            php: "8.4"
+            live: true
+          - magento: "2.4.8-p5"
+            php: "8.3"
+            live: false
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci
+          MYSQL_DATABASE: magento
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci" --health-interval=5s --health-retries=30
+      opensearch:
+        image: opensearchproject/opensearch:2.19.1
+        env:
+          discovery.type: single-node
+          DISABLE_SECURITY_PLUGIN: "true"
+          DISABLE_INSTALL_DEMO_CONFIG: "true"
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+        ports: ["9200:9200"]
+        options: >-
+          --health-cmd="curl -s http://localhost:9200/_cluster/health" --health-interval=10s --health-retries=30
+    env:
+      COMPOSER_AUTH: >-
+        {"http-basic":{"repo.magento.com":{"username":"${{ secrets.MAGENTO_PUBLIC_KEY }}","password":"${{ secrets.MAGENTO_PRIVATE_KEY }}"}}}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: bcmath, ctype, curl, dom, fileinfo, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip, ftp
+          ini-values: memory_limit=-1
+          tools: composer:v2
+
+      - name: Create the Magento project
+        run: |
+          composer create-project --no-interaction --no-progress --repository-url=https://repo.magento.com/ \
+            "magento/project-community-edition=${{ matrix.magento }}" magento
+
+      - name: Require this module through composer (path repository)
+        working-directory: magento
+        run: |
+          composer config repositories.kwtsms path "$GITHUB_WORKSPACE/src/SmsIntegration"
+          composer require --no-interaction --no-progress "kwtsms/module-sms-integration:*"
+
+      - name: setup:install
+        working-directory: magento
+        run: |
+          php bin/magento setup:install --no-interaction \
+            --base-url=http://localhost/ --db-host=127.0.0.1 --db-name=magento --db-user=root --db-password=ci \
+            --admin-firstname=QA --admin-lastname=Admin --admin-email=qa.admin@example.com \
+            --admin-user=qaadmin --admin-password="ci$(openssl rand -hex 8)" \
+            --language=en_US --currency=KWD --timezone=Asia/Kuwait --use-rewrites=1 \
+            --search-engine=opensearch --opensearch-host=127.0.0.1 --opensearch-port=9200
+
+      - name: Module enabled, setup:upgrade, di:compile
+        working-directory: magento
+        run: |
+          php bin/magento module:status KwtSms_SmsIntegration | tee status.txt
+          grep -q "Module is enabled" status.txt
+          php bin/magento setup:upgrade --no-interaction
+          php bin/magento setup:di:compile
+          php bin/magento setup:db:status
+
+      - name: Magento2 coding standard (severity 10)
+        working-directory: magento
+        run: vendor/bin/phpcs --standard=Magento2 --severity=10 --extensions=php,phtml "$GITHUB_WORKSPACE/src/SmsIntegration"
+
+      - name: One live send through the module (test=1)
+        if: matrix.live
+        working-directory: magento
+        env:
+          KWTSMS_USERNAME: ${{ secrets.KWTSMS_USERNAME }}
+          KWTSMS_PASSWORD: ${{ secrets.KWTSMS_PASSWORD }}
+          KWTSMS_TEST_NUMBER: ${{ secrets.KWTSMS_TEST_NUMBER }}
+        run: |
+          if [ -z "$KWTSMS_USERNAME" ] || [ -z "$KWTSMS_TEST_NUMBER" ]; then echo "No credentials (fork?): skipped"; exit 0; fi
+          php bin/magento config:set kwtsms/general/enabled 1
+          php bin/magento config:set kwtsms/general/test_mode 1
+          php bin/magento config:set kwtsms/general/sender_id KWT-SMS
+          php bin/magento config:set kwtsms/gateway/username "$KWTSMS_USERNAME"
+          php bin/magento config:set kwtsms/gateway/password "$KWTSMS_PASSWORD"
+          php "$GITHUB_WORKSPACE/.github/ci/live-send.php"
