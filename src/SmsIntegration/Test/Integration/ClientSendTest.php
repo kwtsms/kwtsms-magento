@@ -132,7 +132,10 @@ class ClientSendTest extends TestCase
         $curlFactory = new TestCurlFactory();
         $logger = new NullLogger();
 
-        $this->client = new Client($config, $curlFactory, $logger);
+        // 2026-11-07 08:15 +03: Client now also takes PackageInfo (User-Agent version).
+        $packageInfo = $this->createMock(\Magento\Framework\Module\PackageInfo::class);
+        $packageInfo->method('getVersion')->willReturn('test');
+        $this->client = new Client($config, $curlFactory, $logger, $packageInfo);
     }
 
     // ---- Client::send() single number ----

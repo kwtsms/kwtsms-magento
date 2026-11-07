@@ -17,6 +17,7 @@ namespace KwtSms\SmsIntegration\Model\Api;
 
 use KwtSms\SmsIntegration\Model\Config;
 use Magento\Framework\HTTP\Client\CurlFactory;
+use Magento\Framework\Module\PackageInfo;
 use Psr\Log\LoggerInterface;
 
 class Client
@@ -35,15 +36,22 @@ class Client
     private Config $config;
     private CurlFactory $curlFactory;
     private LoggerInterface $logger;
+    private PackageInfo $packageInfo;
 
+    /**
+     * 2026-11-07 08:15 +03: PackageInfo added to read the module version for the User-Agent (replaces a silenced
+     * file_get_contents that fails the Marketplace coding standard at severity 10). Task int-rerelease-number.
+     */
     public function __construct(
         Config $config,
         CurlFactory $curlFactory,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PackageInfo $packageInfo
     ) {
         $this->config = $config;
         $this->curlFactory = $curlFactory;
         $this->logger = $logger;
+        $this->packageInfo = $packageInfo;
     }
 
     /**
@@ -217,8 +225,8 @@ class Client
         static $userAgent = null;
 
         if ($userAgent === null) {
-            $composer = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/composer.json'), true);
-            $version = is_array($composer) && !empty($composer['version']) ? (string) $composer['version'] : '0';
+            // 2026-11-07 08:15 +03: version from Magento's PackageInfo (composer.json "version"), no file read here.
+            $version = (string) ($this->packageInfo->getVersion('KwtSms_SmsIntegration') ?: '0');
             $userAgent = 'kwtsms-magento/' . preg_replace('/[^0-9A-Za-z.+-]/', '', $version);
         }
 

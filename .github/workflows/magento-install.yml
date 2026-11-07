@@ -99,7 +99,8 @@ jobs:
 
       - name: Magento2 coding standard (severity 10)
         working-directory: magento
-        run: vendor/bin/phpcs --standard=Magento2 --severity=10 --extensions=php,phtml "$GITHUB_WORKSPACE/src/SmsIntegration"
+        # 2026-11-07 08:15 +03: Test/ is excluded: tests are not part of the Marketplace package.
+        run: vendor/bin/phpcs --standard=Magento2 --severity=10 --extensions=php,phtml --ignore="*/Test/*" "$GITHUB_WORKSPACE/src/SmsIntegration"
 
       - name: One live send through the module (test=1)
         if: matrix.live
