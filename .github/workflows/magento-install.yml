@@ -32,6 +32,10 @@ jobs:
           - magento: "2.4.9"
             php: "8.4"
             live: true
+          # 2026-11-07 16:05 +03: Adobe EQP asks extensions to allow the newest PHP the Magento version supports (8.5 for 2.4.9).
+          - magento: "2.4.9"
+            php: "8.5"
+            live: false
           - magento: "2.4.8-p5"
             php: "8.3"
             live: false
