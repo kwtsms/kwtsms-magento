@@ -16,6 +16,7 @@ use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
 use KwtSms\SmsIntegration\Model\Config;
 use KwtSms\SmsIntegration\Api\Data\GatewayDataInterface;
+use KwtSms\SmsIntegration\Model\GatewayList;
 use KwtSms\SmsIntegration\Model\ResourceModel\GatewayData\CollectionFactory as GatewayCollectionFactory;
 use KwtSms\SmsIntegration\Model\ResourceModel\SmsLog\CollectionFactory as SmsLogCollectionFactory;
 use KwtSms\SmsIntegration\Api\Data\SmsLogInterface;
@@ -88,13 +89,11 @@ class Dashboard extends Template
      */
     public function getSenderIds(): array
     {
-        $data = $this->loadGatewayData(GatewayDataInterface::TYPE_SENDERID);
-        if ($data === null) {
-            return [];
-        }
-
-        $decoded = json_decode($data, true);
-        return is_array($decoded) ? $decoded : [];
+        // 2026-11-11 18:03 +03: read the list from a bare list or a full API response row. Task magento-111.
+        return GatewayList::fromJson(
+            $this->loadGatewayData(GatewayDataInterface::TYPE_SENDERID),
+            GatewayList::KEY_SENDERID
+        );
     }
 
     /**
@@ -104,13 +103,11 @@ class Dashboard extends Template
      */
     public function getCoverage(): array
     {
-        $data = $this->loadGatewayData(GatewayDataInterface::TYPE_COVERAGE);
-        if ($data === null) {
-            return [];
-        }
-
-        $decoded = json_decode($data, true);
-        return is_array($decoded) ? $decoded : [];
+        // 2026-11-11 18:03 +03: read the list from a bare list or a full API response row. Task magento-111.
+        return GatewayList::fromJson(
+            $this->loadGatewayData(GatewayDataInterface::TYPE_COVERAGE),
+            GatewayList::KEY_COVERAGE
+        );
     }
 
     /**

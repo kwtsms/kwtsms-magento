@@ -137,6 +137,10 @@ class TestConnection extends Action
             try {
                 $senderResult = $this->apiClient->getSenderIds();
                 $senderIds = $senderResult['senderid'] ?? [];
+                // 2026-11-11 18:10 +03: save only when the API returned the list, so a failed call keeps the cached one, task magento-111
+                if (!isset($senderResult['senderid']) || !is_array($senderResult['senderid'])) {
+                    throw new \RuntimeException('sender ID list missing');
+                }
                 $this->saveGatewayData(
                     GatewayDataInterface::TYPE_SENDERID,
                     json_encode($senderIds),
@@ -148,6 +152,10 @@ class TestConnection extends Action
 
             try {
                 $coverageResult = $this->apiClient->getCoverage();
+                // 2026-11-11 18:10 +03: save only when the API returned the list, so a failed call keeps the cached one, task magento-111
+                if (!isset($coverageResult['prefixes']) || !is_array($coverageResult['prefixes'])) {
+                    throw new \RuntimeException('coverage list missing');
+                }
                 $this->saveGatewayData(
                     GatewayDataInterface::TYPE_COVERAGE,
                     json_encode($coverageResult['prefixes'] ?? []),

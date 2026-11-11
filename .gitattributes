@@ -1,0 +1,2 @@
+# 2026-11-11 18:10 +03: keep the module test folder out of the store and Composer packages, task magento-111
+/src/SmsIntegration/Test export-ignore
