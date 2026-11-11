@@ -6,7 +6,7 @@
 # kwtSMS for Magento 2
 
 [![Magento](https://img.shields.io/badge/Magento-2.4.7%2B-orange.svg)](https://github.com/magento/magento2)
-[![PHP](https://img.shields.io/badge/PHP-8.2%20%7C%208.3-777BB4?logo=php&logoColor=white)](https://php.net)
+[![PHP](https://img.shields.io/badge/PHP-8.2%20%7C%208.3%20%7C%208.4%20%7C%208.5-777BB4?logo=php&logoColor=white)](https://php.net)
 [![Release](https://img.shields.io/github/v/release/kwtsms/kwtsms-magento)](https://github.com/kwtsms/kwtsms-magento/releases)
 [![License: OSL-3.0](https://img.shields.io/badge/License-OSL--3.0-green.svg)](https://opensource.org/license/osl-3-0)
 [![CodeQL](https://github.com/kwtsms/kwtsms-magento/actions/workflows/codeql.yml/badge.svg)](https://github.com/kwtsms/kwtsms-magento/actions/workflows/codeql.yml)
@@ -36,7 +36,7 @@ free API testing and credits that do not expire.
 
 ## Requirements
 
-- Magento Open Source or Adobe Commerce 2.4.7 or later, PHP 8.2 or 8.3.
+- Magento Open Source or Adobe Commerce 2.4.7 or later, PHP 8.2 to 8.5.
 - A kwtSMS account (free test account, no papers): https://www.kwtsms.com/cportal/signup/
 
 ## Installation
