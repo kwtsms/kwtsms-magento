@@ -11,6 +11,7 @@ namespace KwtSms\SmsIntegration\Model\Config\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
 use KwtSms\SmsIntegration\Api\Data\GatewayDataInterface;
+use KwtSms\SmsIntegration\Model\GatewayList;
 use KwtSms\SmsIntegration\Model\ResourceModel\GatewayData\CollectionFactory as GatewayCollectionFactory;
 
 class SenderId implements OptionSourceInterface
@@ -69,11 +70,7 @@ class SenderId implements OptionSourceInterface
         $item = $collection->getFirstItem();
         $value = $item->getDataValue();
 
-        if ($value === null) {
-            return [];
-        }
-
-        $decoded = json_decode($value, true);
-        return is_array($decoded) ? $decoded : [];
+        // 2026-11-11 18:03 +03: read the list from a bare list or a full API response row. Task magento-111.
+        return GatewayList::fromJson($value, GatewayList::KEY_SENDERID);
     }
 }

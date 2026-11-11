@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace KwtSms\SmsIntegration\Model\Phone;
 
 use KwtSms\SmsIntegration\Model\Config;
+use KwtSms\SmsIntegration\Model\GatewayList;
 
 class Normalizer
 {
@@ -218,6 +219,8 @@ class Normalizer
      */
     public function isInCoverage(string $normalized, array $coveragePrefixes): bool
     {
+        // 2026-11-11 18:03 +03: accept a bare prefix list or a full API response array. Task magento-111.
+        $coveragePrefixes = GatewayList::fromArray($coveragePrefixes, GatewayList::KEY_COVERAGE);
         if (empty($coveragePrefixes)) {
             return true;
         }

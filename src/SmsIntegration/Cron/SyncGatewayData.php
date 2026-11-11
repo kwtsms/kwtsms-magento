@@ -16,6 +16,7 @@ use KwtSms\SmsIntegration\Api\Data\GatewayDataInterface;
 use KwtSms\SmsIntegration\Model\Api\Client;
 use KwtSms\SmsIntegration\Model\Config;
 use KwtSms\SmsIntegration\Model\GatewayDataFactory;
+use KwtSms\SmsIntegration\Model\GatewayList;
 use KwtSms\SmsIntegration\Model\ResourceModel\GatewayData as GatewayDataResource;
 use Psr\Log\LoggerInterface;
 
@@ -85,9 +86,16 @@ class SyncGatewayData
             return;
         }
 
+        // 2026-11-11 18:03 +03: store the synced lists in the expected format, as the manual Sync does: balance as the
+        // full response, sender IDs and coverage as the bare list. A response whose result is not OK keeps the cached
+        // row. Task magento-111.
         try {
             $balance = $this->apiClient->getBalance();
-            $this->saveGatewayData(GatewayDataInterface::TYPE_BALANCE, $balance);
+            if ($this->isOk($balance)) {
+                $this->saveGatewayData(GatewayDataInterface::TYPE_BALANCE, $balance);
+            } else {
+                $this->logNotOk('balance', $balance);
+            }
         } catch (\Exception $e) {
             $this->logger->error('kwtSMS: Failed to sync balance', [
                 'message' => $e->getMessage(),
@@ -96,7 +104,14 @@ class SyncGatewayData
 
         try {
             $senderIds = $this->apiClient->getSenderIds();
-            $this->saveGatewayData(GatewayDataInterface::TYPE_SENDERID, $senderIds);
+            if ($this->isOk($senderIds) && is_array($senderIds[GatewayList::KEY_SENDERID] ?? null)) {
+                $this->saveGatewayData(
+                    GatewayDataInterface::TYPE_SENDERID,
+                    $senderIds[GatewayList::KEY_SENDERID]
+                );
+            } else {
+                $this->logNotOk('sender IDs', $senderIds);
+            }
         } catch (\Exception $e) {
             $this->logger->error('kwtSMS: Failed to sync sender IDs', [
                 'message' => $e->getMessage(),
@@ -105,14 +120,51 @@ class SyncGatewayData
 
         try {
             $coverage = $this->apiClient->getCoverage();
-            $this->saveGatewayData(GatewayDataInterface::TYPE_COVERAGE, $coverage);
+            if ($this->isOk($coverage) && is_array($coverage[GatewayList::KEY_COVERAGE] ?? null)) {
+                $this->saveGatewayData(
+                    GatewayDataInterface::TYPE_COVERAGE,
+                    $coverage[GatewayList::KEY_COVERAGE]
+                );
+            } else {
+                $this->logNotOk('coverage data', $coverage);
+            }
         } catch (\Exception $e) {
             $this->logger->error('kwtSMS: Failed to sync coverage data', [
                 'message' => $e->getMessage(),
             ]);
         }
 
-        $this->logger->info('kwtSMS: Gateway data synced successfully');
+        $this->logger->info('kwtSMS: Gateway data sync finished');
+    }
+
+    /**
+     * Whether an API response reports success.
+     *
+     * 2026-11-11 18:03 +03: added so a response that is not OK never replaces cached data. Task magento-111.
+     *
+     * @param array $response
+     * @return bool
+     */
+    private function isOk(array $response): bool
+    {
+        return ($response['result'] ?? '') === 'OK';
+    }
+
+    /**
+     * Log a response that was not stored.
+     *
+     * 2026-11-11 18:03 +03: added with isOk(). Task magento-111.
+     *
+     * @param string $what
+     * @param array $response
+     * @return void
+     */
+    private function logNotOk(string $what, array $response): void
+    {
+        $this->logger->warning('kwtSMS: ' . $what . ' not synced, cached data kept', [
+            'result' => $response['result'] ?? null,
+            'code'   => $response['code'] ?? null,
+        ]);
     }
 
     /**

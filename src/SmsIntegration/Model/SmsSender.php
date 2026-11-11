@@ -25,6 +25,7 @@ use KwtSms\SmsIntegration\Api\Data\SmsLogInterfaceFactory;
 use KwtSms\SmsIntegration\Api\SmsLogRepositoryInterface;
 use KwtSms\SmsIntegration\Model\Api\Client;
 use KwtSms\SmsIntegration\Model\Api\ErrorCodes;
+use KwtSms\SmsIntegration\Model\GatewayList;
 use KwtSms\SmsIntegration\Model\Phone\Normalizer;
 use KwtSms\SmsIntegration\Model\ResourceModel\GatewayData as GatewayDataResource;
 use Psr\Log\LoggerInterface;
@@ -334,12 +335,11 @@ class SmsSender
     /** Read coverage prefixes from local DB cache. */
     private function loadCoveragePrefixes(): array
     {
-        $raw = $this->getGatewayValue(GatewayDataInterface::TYPE_COVERAGE);
-        if ($raw === null) {
-            return [];
-        }
-        $decoded = json_decode($raw, true);
-        return is_array($decoded) ? $decoded : [];
+        // 2026-11-11 18:03 +03: read the list from a bare list or a full API response row. Task magento-111.
+        return GatewayList::fromJson(
+            $this->getGatewayValue(GatewayDataInterface::TYPE_COVERAGE),
+            GatewayList::KEY_COVERAGE
+        );
     }
 
     /** Persist an SMS log entry. */
