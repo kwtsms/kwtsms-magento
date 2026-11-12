@@ -47,7 +47,11 @@ $recorder = new class extends SmsSender {
         return ['success' => true, 'sent' => 1, 'failed' => 0, 'skipped' => 0, 'invalid' => [], 'error' => null];
     }
 };
-$om->addSharedInstance($recorder, SmsSender::class);
+// 2026-11-12 10:13 +03: the production ObjectManager has no addSharedInstance(); put the recorder into its shared
+// instance list directly, so observers built after this line receive it.
+\Closure::bind(function () use ($recorder) {
+    $this->_sharedInstances[SmsSender::class] = $recorder;
+}, $om, get_class($om))();
 
 function setFlag($om, string $path, string $value): void
 {
