@@ -121,3 +121,9 @@ jobs:
           php bin/magento config:set kwtsms/gateway/username "$KWTSMS_USERNAME"
           php bin/magento config:set kwtsms/gateway/password "$KWTSMS_PASSWORD"
           php "$GITHUB_WORKSPACE/.github/ci/live-send.php"
+
+      # 2026-11-12 10:07 +03: real orders through invoice, shipment, hold and cancel with SmsSender recorded (nothing
+      # sent): one SMS per customer-visible change, never a second status SMS. magento-audit-fixes F1.
+      - name: Order event flow (which SMS each step asks for)
+        working-directory: magento
+        run: php "$GITHUB_WORKSPACE/.github/ci/event-flow.php"
