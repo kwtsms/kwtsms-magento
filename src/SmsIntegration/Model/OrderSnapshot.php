@@ -28,6 +28,15 @@ class OrderSnapshot
     private array $snapshots = [];
 
     /**
+     * Weak reference to the order each snapshot belongs to (same keys as $snapshots).
+     * 2026-11-12 10:31 +03: Onyx low finding on #1244: a save that throws leaves its entry, and PHP can reuse the
+     * object id for a later order in the same process; the weak reference tells the two apart.
+     *
+     * @var array<int, \WeakReference>
+     */
+    private array $owners = [];
+
+    /**
      * @var ResourceConnection
      */
     private ResourceConnection $resource;
@@ -77,6 +86,7 @@ class OrderSnapshot
             }
         }
         $this->snapshots[spl_object_id($order)] = $snapshot;
+        $this->owners[spl_object_id($order)] = \WeakReference::create($order);
     }
 
     /**
@@ -90,7 +100,12 @@ class OrderSnapshot
     {
         $key = spl_object_id($order);
         $snapshot = $this->snapshots[$key] ?? null;
-        unset($this->snapshots[$key]);
+        $owner = $this->owners[$key] ?? null;
+        unset($this->snapshots[$key], $this->owners[$key]);
+        // 2026-11-12 10:31 +03: a leftover entry from another (freed) order object is ignored, Onyx #1244.
+        if ($owner === null || $owner->get() !== $order) {
+            return null;
+        }
         return $snapshot;
     }
 }
