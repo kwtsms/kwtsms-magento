@@ -13,6 +13,12 @@
     <!-- New order + status change both handled by OrderSaveAfter.
          Detects new orders (origStatus is null) and status changes separately.
          Works for both frontend checkout and admin-created orders. -->
+    <!-- 2026-11-12 10:18 +03: stored values before each order save (OrderSnapshot), so a later save of an order
+         loaded through the repository is not taken for a new order. magento-audit-fixes F1. -->
+    <event name="sales_order_save_before">
+        <observer name="kwtsms_order_save_before"
+                  instance="KwtSms\SmsIntegration\Observer\OrderSaveBefore"/>
+    </event>
     <event name="sales_order_save_after">
         <observer name="kwtsms_order_save_after"
                   instance="KwtSms\SmsIntegration\Observer\OrderSaveAfter"/>
