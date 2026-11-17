@@ -10,6 +10,10 @@ updates:
       - "dependencies"
     commit-message:
       prefix: "deps"
+    # 2026-11-17 12:01 +03: magento/* live on repo.magento.com (needs auth keys), so every weekly run failed with
+    # "could not be found in any version"; their >=100.0.0 range is our compatibility policy, not something to bump.
+    ignore:
+      - dependency-name: "magento/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
