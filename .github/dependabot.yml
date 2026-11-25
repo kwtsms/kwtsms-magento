@@ -26,3 +26,8 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "ci"
+    # 2026-11-25 10:37 +03: init and analyze must move together (CodeQL refuses mixed versions; PRs 13+14 failed), repo sweep
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action*"
